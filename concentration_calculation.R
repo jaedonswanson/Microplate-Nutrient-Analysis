@@ -1,152 +1,102 @@
-# BEFORE RUNNING:
-#   1. Run your calibration script and note the slope and intercept it prints.
-#   2. Fill in those values in SECTION 1 below.
-#   3. Update the file path and column range for your unknowns.
+library(tidyverse)
 # =============================================================================
-library(tidyverse)   # For data wrangling and the %>% pipe operator
+# Input Section
 # =============================================================================
-# SECTION 1: USER INPUTS — UPDATE THESE FOR EACH PLATE
-# =============================================================================
+input_path     <- "Plates/Nitrite/06172026_nitrite_1.csv"
+USE_HIGH_RANGE <- FALSE 
+ROWS_TO_DROP   <- c()
 
-# --- Calibration values ------------------------------------------------------
-# Copy these from the annotation box or console output of your calibration
-# script. These tell us the relationship between absorbance and concentration.
-SLOPE     <- 0.5132    # <-- PASTE your slope here
-INTERCEPT <- 0.0821    # <-- PASTE your intercept here
-
-# --- File path ---------------------------------------------------------------
-# Point this to the same CSV used in the calibration script.
-data <- read.csv("Plates/Nitrite/20260617_nitrite_2.csv")
-
-# --- Which columns are your UNKNOWN samples? ---------------------------------
-# Set these to the column numbers that contain your unknown sample absorbances.
-# Example: if unknowns are in columns 4 through 12, set:
-#   SAMPLE_COL_START <- 4
-#   SAMPLE_COL_END   <- 12
-SAMPLE_COL_START <- 4    # <-- CHANGE THIS
-SAMPLE_COL_END   <- 12   # <-- CHANGE THIS
-
-# --- How many rows are your standards? ---------------------------------------
-# The first N rows are standards — we skip those and only process sample rows.
-# For an 8-point standard curve, this is 8.
-N_STANDARD_ROWS <- 8     # <-- CHANGE THIS if your curve has more/fewer points
-
-# --- Output file name --------------------------------------------------------
-# The results CSV will be saved here. Change the name if you like.
-OUTPUT_FILE <- "Results/nitrite_concentrations.csv"
-
+# Quality Control Settings
+MIN_R2_THRESHOLD <- 0.98  # Your target minimum R²
+HALT_ON_LOW_R2   <- TRUE  # TRUE = stop script if R² is bad; FALSE = warn but proceed
 
 # =============================================================================
-# SECTION 2: LOAD AND CLEAN DATA
+# Concentration(s) & output
 # =============================================================================
+n_low  <- c(0, 0.05, 0.1, 0.2, 0.4, 0.6, 0.8, 1.0)   
+n_high <- c(0, 0.2,  0.5, 1.0, 2.0, 4.0, 7.5, 10.0)  
+conc_vector <- if (USE_HIGH_RANGE) n_high else n_low
 
-# Remove the stray "X" column Excel sometimes adds.
-if ("X" %in% names(data)) data$X <- NULL
-
-# Remove rows with missing values.
-data <- data %>% drop_na()
-
-# Pull out only the unknown sample rows (skip the standard rows at the top).
-# Negative indexing in R: -1:-8 means "give me everything EXCEPT rows 1 to 8."
-samples_raw <- data[-1:-N_STANDARD_ROWS, SAMPLE_COL_START:SAMPLE_COL_END]
-
-# Print a quick check so you can confirm the right data was selected.
-cat("=== Raw sample absorbance values loaded ===\n")
-cat("Rows (samples):", nrow(samples_raw), "\n")
-cat("Columns (replicates or wells):", ncol(samples_raw), "\n\n")
-
+output_path <- gsub("^Plates/", "Concentrations/", input_path)
 
 # =============================================================================
-# SECTION 3: BACK-CALCULATE CONCENTRATIONS
+# Curve Fitting
 # =============================================================================
-# Apply the rearranged Beer-Lambert equation to every cell in the table.
-# across(everything()) means "do this to every column."
-# The tilde (~) and .x are how tidyverse writes a mini-function inline:
-#   (.x - INTERCEPT) / SLOPE  means  (this_value - intercept) / slope
+raw_data <- read.csv(input_path, check.names = FALSE)
 
-samples_conc <- samples_raw %>%
-  mutate(across(everything(), ~ (.x - INTERCEPT) / SLOPE))
-
-# Add a column labeling each row by sample number so results are easy to read.
-# nrow() counts the number of rows; paste0() glues text together.
-samples_conc <- samples_conc %>%
-  mutate(Sample = paste0("Sample_", row_number()), .before = 1)
-
-samples_raw <- samples_raw %>%
-  mutate(Sample = paste0("Sample_", row_number()), .before = 1)
-
-cat("=== Calculated concentrations (µM) ===\n")
-print(samples_conc)
-cat("\n")
-
-
-# =============================================================================
-# SECTION 4: SUMMARY STATISTICS PER SAMPLE
-# =============================================================================
-# For each sample row, calculate the mean and standard deviation across
-# all replicates. This gives you one concentration estimate per sample
-# with a measure of how consistent the replicates were.
-
-# We need to pivot to long format first so we can summarise across replicates.
-# pivot_longer() collapses all replicate columns into two columns:
-#   "Replicate" (which column it came from) and "Concentration" (the value).
-
-summary_stats <- samples_conc %>%
+standards_clean <- raw_data %>%
+  select(2:4) %>%
+  setNames(c("Rep_1", "Rep_2", "Rep_3")) %>%
+  mutate(across(everything(), as.numeric)) %>%
+  mutate(Standard_Level = row_number()) %>%
+  mutate(Concentration = conc_vector[Standard_Level]) %>%
+  mutate(Flagged = Standard_Level %in% ROWS_TO_DROP) %>%
   pivot_longer(
-    cols      = -Sample,           # Pivot everything EXCEPT the Sample column
-    names_to  = "Replicate",
-    values_to = "Concentration_uM"
-  ) %>%
-  group_by(Sample) %>%            # Do the calculations separately for each sample
-  summarise(
-    Mean_uM = round(mean(Concentration_uM, na.rm = TRUE), 4),   # Average
-    SD_uM   = round(sd(Concentration_uM,   na.rm = TRUE), 4),   # Std deviation
-    CV_pct  = round((SD_uM / Mean_uM) * 100, 2),                # % coefficient of variation
-    N_reps  = n(),                                               # How many replicates
-    .groups = "drop"
-  ) %>%
-  # Flag any samples with high variability (CV > 10% is a common threshold).
-  # if_else() works like: if_else(condition, value_if_true, value_if_false)
-  mutate(Flag = if_else(CV_pct > 10, "⚠ High CV", "OK"))
-
-cat("=== Summary statistics per sample ===\n")
-print(summary_stats)
-cat("\n")
-
-# Warn the user if any samples were flagged.
-n_flagged <- sum(summary_stats$Flag != "OK")
-if (n_flagged > 0) {
-  cat("⚠ WARNING:", n_flagged, "sample(s) have CV > 10%. Check replicates.\n\n")
-} else {
-  cat("✓ All samples have acceptable replicate variability (CV ≤ 10%).\n\n")
-}
-
-
-# =============================================================================
-# SECTION 5: SAVE RESULTS TO CSV
-# =============================================================================
-# Combine the raw absorbances, calculated concentrations, and summary stats
-# into one tidy output file.
-
-# Make sure the output folder exists; create it if not.
-# dirname() extracts just the folder path from a full file path.
-if (!dir.exists(dirname(OUTPUT_FILE))) {
-  dir.create(dirname(OUTPUT_FILE), recursive = TRUE)
-}
-
-# Build a combined output table:
-#   - Raw absorbances (so the reader can verify)
-#   - Calculated concentrations per replicate
-#   - Summary statistics
-output_full <- summary_stats %>%
-  left_join(
-    # Pivot the concentration table to long, then back to wide with clearer names
-    samples_conc %>%
-      pivot_longer(cols = -Sample, names_to = "Replicate", values_to = "Conc_uM") %>%
-      pivot_wider(names_from = Replicate, values_from = Conc_uM,
-                  names_prefix = "Conc_"),
-    by = "Sample"
+    cols      = c("Rep_1", "Rep_2", "Rep_3"),
+    names_to  = "Replication",
+    values_to = "Absorbance"
   )
 
-write.csv(output_full, OUTPUT_FILE, row.names = FALSE)
-cat("✓ Results saved to:", OUTPUT_FILE, "\n")
+standards_for_model <- standards_clean %>%
+  filter(!Flagged) %>%
+  drop_na(Absorbance)
+
+fit_model  <- lm(Absorbance ~ Concentration, data = standards_for_model)
+slope      <- coef(fit_model)[["Concentration"]]
+intercept  <- coef(fit_model)[["(Intercept)"]]
+current_r2 <- summary(fit_model)$r.squared
+
+# =============================================================================
+# SECTION 4: AUTOMATED QUALITY CONTROL & DIAGNOSTICS SCANNER
+# =============================================================================
+cat("--- Calibration Performance ---\n")
+cat("Standard Range: ", if (USE_HIGH_RANGE) "HIGH (0-10 µM)" else "LOW (0-1.0 µM)", "\n")
+cat("Omitted Rows:   ", if (length(ROWS_TO_DROP) == 0) "None" else paste(ROWS_TO_DROP, collapse = ", "), "\n")
+cat("Achieved R²:    ", round(current_r2, 5), "\n")
+
+if (current_r2 >= MIN_R2_THRESHOLD) {
+  cat("✅ QC PASSED: R² meets ", MIN_R2_THRESHOLD, " threshold.\n\n", sep="")
+} else {
+  cat("\n=============================================================================\n")
+  cat("❌ QC WARNING: Current R² (", round(current_r2, 4), ") is BELOW ", MIN_R2_THRESHOLD, " target!\n", sep="")
+  cat("=============================================================================\n")
+  cat("Running diagnostic scan to find a better calibration setup...\n\n")
+  
+  row_letters <- c("A", "B", "C", "D", "E", "F", "G", "H")
+  
+  for (i in 1:8) {
+    # Simulate dropping this specific row standalone
+    sim_standards <- standards_clean %>%
+      filter(Standard_Level != i) %>%
+      drop_na(Absorbance)
+    
+    if (nrow(sim_standards) > 2) {
+      sim_fit <- lm(Absorbance ~ Concentration, data = sim_standards)
+      sim_r2  <- summary(sim_fit)$r.squared
+      
+      status_marker <- if (sim_r2 >= MIN_R2_THRESHOLD) " [🎯 TARGET MET!]" else ""
+      cat("  -> If you omit Row ", row_letters[i], " (Level ", i, "): Simulated R² = ", 
+          round(sim_r2, 4), status_marker, "\n", sep="")
+    }
+  }
+  
+  cat("\n💡 Recommendation: Check your plate range setting or add a bad row to 'ROWS_TO_DROP' above.\n")
+  
+  if (HALT_ON_LOW_R2) {
+    stop("Execution stopped: Data not exported due to low R² quality.")
+  }
+}
+
+# =============================================================================
+# SECTION 5: CONVERT UNKNOWNS & EXPORT LAYOUT (Runs only if QC passes or flag allows)
+# =============================================================================
+concentration_plate <- raw_data
+
+# Back-calculate concentration for unknown columns 4 to 12 (indices 5:13)
+for (col_idx in 5:13) {
+  concentration_plate[[col_idx]] <- (as.numeric(concentration_plate[[col_idx]]) - intercept) / slope
+}
+
+dir.create(dirname(output_path), recursive = TRUE, showWarnings = FALSE)
+write.csv(concentration_plate, output_path, row.names = FALSE)
+cat("Matrix layout safely saved to: ", output_path, "\n")

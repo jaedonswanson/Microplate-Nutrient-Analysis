@@ -7,15 +7,15 @@ library(ggpmisc)
 # =============================================================================
 # --- File path ---------------------------------------------------------------
 # Update this to point to the CSV file for the plate you are checking.
-data <- read.csv("Plates/Nitrate/20260619_nitrate_2.csv")
+data <- read.csv("Plates/Nitrite/06172026_nitrite_1.csv")
 # --- Which standard range are you using? -------------------------------------
 # Set USE_HIGH_RANGE to TRUE for n_high, or FALSE for n_low.
 # This controls which set of known concentrations gets attached to your data.
-USE_HIGH_RANGE <- TRUE   # <-- CHANGE THIS: TRUE = high range, FALSE = low range
+USE_HIGH_RANGE <- FALSE   # <-- CHANGE THIS: TRUE = high range, FALSE = low range
 
 # --- Which standard rows should be DROPPED? ----------------------------------
 # Leave as c() (empty) to keep all standards.
-ROWS_TO_DROP <- c(8)   # <-- CHANGE THIS each plate as needed
+ROWS_TO_DROP <- c()   # <-- CHANGE THIS each plate as needed
 # =============================================================================
 # SECTION 2: CONCENTRATION VECTORS
 # =============================================================================
@@ -36,12 +36,6 @@ cat("Concentrations:", paste(conc_vector, collapse = ", "), "\n\n")
 # Remove the stray "X" column Excel sometimes adds when you save a CSV.
 # The %in% operator checks if "X" is in the column names.
 if ("X" %in% names(data)) data$X <- NULL
-
-# drop_na() removes any row that has an NA (missing value).
-# This prevents errors in the math steps below.
-data <- data %>% drop_na()
-
-
 # =============================================================================
 # SECTION 4: BUILD THE STANDARDS TABLE
 # =============================================================================
