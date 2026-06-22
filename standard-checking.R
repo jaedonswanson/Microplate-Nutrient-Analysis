@@ -7,15 +7,15 @@ library(ggpmisc)
 # =============================================================================
 # --- File path ---------------------------------------------------------------
 # Update this to point to the CSV file for the plate you are checking.
-data <- read.csv("Plates/Nitrate/20260618_nitrate_2.csv")
+data <- read.csv("Plates/Nitrate/20260619_nitrate_2.csv")
 # --- Which standard range are you using? -------------------------------------
 # Set USE_HIGH_RANGE to TRUE for n_high, or FALSE for n_low.
 # This controls which set of known concentrations gets attached to your data.
-USE_HIGH_RANGE <- FALSE   # <-- CHANGE THIS: TRUE = high range, FALSE = low range
+USE_HIGH_RANGE <- TRUE   # <-- CHANGE THIS: TRUE = high range, FALSE = low range
 
 # --- Which standard rows should be DROPPED? ----------------------------------
 # Leave as c() (empty) to keep all standards.
-ROWS_TO_DROP <- c()   # <-- CHANGE THIS each plate as needed
+ROWS_TO_DROP <- c(8)   # <-- CHANGE THIS each plate as needed
 # =============================================================================
 # SECTION 2: CONCENTRATION VECTORS
 # =============================================================================
@@ -276,24 +276,3 @@ plot_filtered <- ggplot(standards_filtered,
   )
 
 print(plot_filtered)
-
-
-# =============================================================================
-# SECTION 7: SAVE THE EQUATION FOR BACK-CALCULATION (optional)
-# =============================================================================
-# Once you trust your calibration curve, you can use the slope and intercept
-# to convert UNKNOWN absorbance readings into concentrations:
-#
-#   Concentration = (Absorbance - Intercept) / Slope
-#
-# The function below does that math for you. Just pass in a vector of
-# absorbance values from your unknowns.
-
-back_calculate <- function(absorbance_values) {
-  (absorbance_values - intercept_filtered) / slope_filtered
-}
-
-# Example usage (uncomment and replace with your real unknown absorbances):
-# unknown_abs <- c(0.312, 0.455, 0.198)
-# unknown_conc <- back_calculate(unknown_abs)
-# cat("Calculated concentrations (µM):", unknown_conc, "\n")
