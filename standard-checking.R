@@ -7,7 +7,11 @@ library(ggpmisc)
 # =============================================================================
 # --- File path ---------------------------------------------------------------
 # Update this to point to the CSV file for the plate you are checking.
+<<<<<<< HEAD
 data <- read.csv("Plates/Nitrite/06222026_nitrite.csv")
+=======
+data <- read.csv("Plates/Nitrite/06172026_nitrite_1.csv")
+>>>>>>> 3e423c27125c1cdc906cde778036428591f7a5f0
 # --- Which standard range are you using? -------------------------------------
 # Set USE_HIGH_RANGE to TRUE for n_high, or FALSE for n_low.
 # This controls which set of known concentrations gets attached to your data.
@@ -36,12 +40,6 @@ cat("Concentrations:", paste(conc_vector, collapse = ", "), "\n\n")
 # Remove the stray "X" column Excel sometimes adds when you save a CSV.
 # The %in% operator checks if "X" is in the column names.
 if ("X" %in% names(data)) data$X <- NULL
-
-# drop_na() removes any row that has an NA (missing value).
-# This prevents errors in the math steps below.
-data <- data %>% drop_na()
-
-
 # =============================================================================
 # SECTION 4: BUILD THE STANDARDS TABLE
 # =============================================================================
