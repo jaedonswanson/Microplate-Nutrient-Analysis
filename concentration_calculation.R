@@ -6,15 +6,15 @@ library(ggpmisc)
 # Input Section — CHANGE ONLY THESE LINES FOR EACH RUN
 # =============================================================================
 # 1. Path to your raw plate data CSV
-RAW_DATA_PATH  <- "Plates/Nitrate/06192026_nitrate_4.csv"
+RAW_DATA_PATH  <- "Plates/Nitrite/06222026_nitrite_1.csv"
 
 # 2. Paths to your master Excel layout keys
 NITRATE_KEY_PATH <- "Plates/nitrate_key.xlsx"
 NITRITE_KEY_PATH <- "Plates/nitrite_key.xlsx"
 
 # 3. Standard curve calibration settings
-USE_HIGH_RANGE <- TRUE 
-ROWS_TO_DROP   <- c(5, 8)
+USE_HIGH_RANGE <- FALSE 
+ROWS_TO_DROP   <- c()
 
 # 4. Quality Control Settings
 MIN_R2_THRESHOLD <- 0.98  # Your target minimum R²
