@@ -4,11 +4,11 @@ library(ggpmisc)
 
 #### User inputs ####
 # File path
-data <- read.csv("Plates/Nitrite/06192026_nitrite_1.csv")
+data <- read.csv("Plates/Nitrate/06252026_nitrate_1.csv")
 # High or low?
-USE_HIGH_RANGE <- FALSE
+USE_HIGH_RANGE <- TRUE
 #Potential problem standards
-ROWS_TO_DROP <- c(6, 8)   # only change this after checking the curve with all points
+ROWS_TO_DROP <- c()   # only change this after checking the curve with all points
 
 #### Concentration Vector creation ####
 # Concentrations for the standards (ppm)
