@@ -1,6 +1,7 @@
 #### Setting Up the Environment ####
 library(tidyverse)
 library(ggpmisc)
+library(readxl)
 nitrate_key_path <- "Plates/nitrate_key.xlsx"
 nitrite_key_path <- "Plates/nitrite_key.xlsx"
 min_r2 <- 0.98  # Your target minimum R²
@@ -8,13 +9,13 @@ stop_if_low_r2   <- TRUE
 
 #### User Inputs (Should be same as calibration curve) ####
 # Path to your plate
-plate  <- "Plates/Nitrite/06192026_nitrite_1.csv"
+plate  <- "Plates/Nitrate/06252026_nitrate_1.csv"
 
 # High or Low?
-high_range <- FALSE 
+high_range <- TRUE 
 
 # Rows to drop (Same as calibration curve)
-bad_standards   <- c()
+bad_standards   <- c(8)
 
 #### Load Data & Setup Concentration Vectors ####
 data <- read.csv(plate)
@@ -50,13 +51,13 @@ current_r2 <- summary(fit_model)$r.squared
 
 #### Quality Control ####
 cat("--- Calibration Performance ---\n")
-cat("Standard Range: ", if (high_range) "HIGH (0-10 µM)" else "LOW (0-1.0 µM)", "\n") # add a line to indicate whether the standard range is high or low
-cat("Omitted Rows:    ", if (length(bad_standards) == 0) "None" else paste(bad_standards, collapse = ", "), "\n") # add a line to indicate which rows have been omitted
-cat("Achieved R²:     ", round(current_r2, 5), "\n") # add a line to indicate the achieved R² value
+cat("Standard Range: ", if (high_range) "HIGH (0-10 µM)" else "LOW (0-1.0 µM)", "\n") 
+cat("Omitted Rows:    ", if (length(bad_standards) == 0) "None" else paste(bad_standards, collapse = ", "), "\n") 
+cat("Achieved R²:      ", round(current_r2, 5), "\n") 
 
-if (current_r2 >= min_r2) { # if the achieved R² value is greater than or equal to the minimum threshold, print a message indicating that the QC has passed
+if (current_r2 >= min_r2) { 
   cat("✅ QC PASSED: R² meets ", min_r2, " threshold.\n\n", sep="")
-} else { # if the achieved R² value is less than the minimum threshold, print a warning message and run a diagnostic scan to find a better calibration setup
+} else { 
   cat("\n=============================================================================\n")
   cat("❌ QC WARNING: Current R² (", round(current_r2, 4), ") is BELOW ", min_r2, " target!\n", sep="")
   cat("=============================================================================\n")
@@ -64,12 +65,13 @@ if (current_r2 >= min_r2) { # if the achieved R² value is greater than or equal
   
   row_letters <- c("A", "B", "C", "D", "E", "F", "G", "H")
   
-  for (i in 1:8) # Loop through each standard level (1-8) to simulate omitting it and recalculating R²
+  # Added the missing opening brace '{' right here:
+  for (i in 1:8) { 
     sim_standards <- standards_clean %>%
       filter(Standard_Level != i) %>%
       drop_na(Absorbance)
     
-    if (nrow(sim_standards) > 3) { # Ensure there are enough data points to fit a model
+    if (nrow(sim_standards) > 3) { 
       sim_fit <- lm(Absorbance ~ Concentration, data = sim_standards)
       sim_r2  <- summary(sim_fit)$r.squared
       
@@ -77,16 +79,14 @@ if (current_r2 >= min_r2) { # if the achieved R² value is greater than or equal
       cat("  -> If you omit Row ", row_letters[i], " (Level ", i, "): Simulated R² = ", 
           round(sim_r2, 4), status_marker, "\n", sep="")
     }
-  }
+  } # This now correctly closes the for loop
   
   cat("\n💡 Recommendation: Check your plate range setting or add a bad row to 'bad_standards' above.\n")
   
-  if (stop_if_low_r2) { # If the user has set stop_if_low_r2 to TRUE, stop execution and prevent data export
+  if (stop_if_low_r2) { 
     stop("Execution stopped: Data not exported due to low R² quality.")
   }
-}
-
-
+} # This now correctly closes the 'else' block
 #### Mapping and Final Concentration Calculations ####
 # AUTOMATED PATH SELECTION: Detects analyte type from your raw file path
 is_nitrite <- grepl("nitrite", plate, ignore.case = TRUE)
