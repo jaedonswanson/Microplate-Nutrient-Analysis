@@ -4,9 +4,9 @@ library(ggpmisc)
 
 #### User inputs ####
 # File path
-data <- read.csv("Plates/Nitrate/06252026_nitrate_1.csv")
+data <- read.csv("Plates/Nitrite/08032026_nitrite_1.csv")
 # High or low?
-USE_HIGH_RANGE <- TRUE
+USE_HIGH_RANGE <- FALSE
 #Potential problem standards
 ROWS_TO_DROP <- c()   # only change this after checking the curve with all points
 

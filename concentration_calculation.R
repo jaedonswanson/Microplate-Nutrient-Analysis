@@ -9,13 +9,13 @@ stop_if_low_r2   <- TRUE
 
 #### User Inputs (Should be same as calibration curve) ####
 # Path to your plate
-plate  <- "Plates/Nitrate/06252026_nitrate_1.csv"
+plate  <- "Plates/Nitrite/08032026_nitrite_1.csv"
 
 # High or Low?
-high_range <- TRUE 
+high_range <- FALSE 
 
 # Rows to drop (Same as calibration curve)
-bad_standards   <- c(8)
+bad_standards   <- c()
 
 #### Load Data & Setup Concentration Vectors ####
 data <- read.csv(plate)
