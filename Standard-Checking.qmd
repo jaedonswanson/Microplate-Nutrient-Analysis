@@ -1,0 +1,52 @@
+---
+title: "Standard-Checking"
+author: "Jaedon D. Swanson"
+format: html
+editor: visual
+---
+
+# Packages
+
+```         
+library(tidyverse)
+library(ggpmisc)
+```
+
+# User Inputs
+
+## File Path
+
+```{r}
+data <- read.csv("Plates/Nitrite/06192026_nitrite_1.csv")
+```
+
+## Standard Curve
+
+Depending on the standard used, the curve will different x-axis values to match the different standards.
+
+```{r}
+USE_HIGH_RANGE <- FALSE
+```
+
+## Bad Standards
+
+After assessing the standard curve with all standards, it may be necessary to remove standards to get a better r\^2 value.
+
+```{r}
+ROWS_TO_DROP <- c()
+```
+
+When you click the **Render** button a document will be generated that includes both content and the output of embedded code. You can embed code like this:
+
+```{r}
+1 + 1
+```
+
+You can add options to executable code like this
+
+```{r}
+#| echo: false
+2 * 2
+```
+
+The `echo: false` option disables the printing of code (only output is displayed).
