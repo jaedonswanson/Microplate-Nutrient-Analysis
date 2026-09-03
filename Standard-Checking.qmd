@@ -7,7 +7,7 @@ editor: visual
 
 # Packages
 
-```         
+```{r}
 library(tidyverse)
 library(ggpmisc)
 ```
@@ -17,7 +17,7 @@ library(ggpmisc)
 ## File Path
 
 ```{r}
-data <- read.csv("Plates/Nitrite/06192026_nitrite_1.csv")
+data <- read.csv("Plates/Nitrite/06172026_nitrite_1.csv")
 ```
 
 ## Standard Curve
