@@ -1,6 +1,7 @@
 #### Packages used in this code ####
 library(tidyverse)
 library(ggpmisc)
+library(gridExtra)
 
 #### User inputs ####
 # File path
@@ -175,4 +176,5 @@ plot_filtered <- ggplot(data = standards_filtered, aes(x = Concentration, y = Ab
     plot.title       = element_text(face = "bold"),
     plot.subtitle    = element_text(color = "gray40", size = 10)
   )
-print(plot_filtered)
+
+grid.arrange(plot_all, plot_filtered, ncol=2)
