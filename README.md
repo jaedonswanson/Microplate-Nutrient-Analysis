@@ -1,20 +1,38 @@
-# Microplate Nutrient Analysis
-This repository contains everything needed to get started running freshwater samples on a microplate. This is an efficent and inexpensive method of measuring nutrient concentration of freshwater samples. 
-
-This repository also contains all R code used to automate the processing data. I first fit the standard curve then run the calculation script to output the data when I get a sufficent R2
-
-Lastly, this repository contains all data I collected via microplate during my masters program at the University of Nebraska - Omaha
-
-## Core Purpose
-* **Data Cleaning:** Parses and cleans raw 96-well plate reader outputs.
-* **Standard Curves:** Fits linear regressions to standard ladders to calculate exact sample concentrations.
-* **Dilution & Blank Correction:** Automatically applies dilution factors and subtracts blanks.
-* **Visualization:** Uses `ggplot2` to generate standard curve diagnostic plots and final data summaries.
-
-## Required Materials
-* Microplate reader that will read at 540 nm
+# Colorometric analysis of NO$_x$
+This repository contains everything needed to get started running freshwater samples on a microplate (elx800) or similar. This is an efficent and inexpensive method of measuring nutrient concentration of freshwater samples.
 
 ## A note on sample collection
-All samples should be filtered through a .45 micron filter. If the samples can not be processed the same day, freeze them and analyze as soon as possible. 
+If only collecting water samples, they should be filtered through a .45 micron filter. If the samples can not be processed the same day, freeze them. 
 
-I have found that samples collected during baseline conditions (i.e. not immediately proceeding rainfall) are relatively stable when frozen. However, it has been my expeince that samples collected post precipitation are more likely to rapidly degrade. For this reason I recomend that if you are running samples post precipitation, run a 5x dilution as well as the undiluted sample on the same plate.
+# Part 1: Setting up the experienment
+**NOTE:** Double check required chemicals, not all are needed if only running water samples.
+1. Pick the relevant procedure 
+   - [Ammonium](/Procedures/Micoplate%20Anlaysis%20of%20Ammonium.md)
+   - [Nitrate & Nitrite](/Procedures/Microplate%20Analysis%20of%20Nitrate%20&%20Nitrite.md)
+2. Set up an excel file to act as a key for the sample locations.
+   1. If not formatted like [my key](/Plates/nitrate_key.xlsx), the code following this will break. 
+   
+3. After appropriate incubation time, analyze the plate using the computer software. 
+   - [Nitrate/Nitrite Procedure](Nitrate-Nitrite_protocol)
+   - [Ammonium Procedure]()
+4. Copy the data to a csv and name it 
+
+## Part 2: Assessing the Standards
+1. After the plate is run copy the data to a `.csv` name it:
+   1. [MMDDYYYY_nutrient_replication](/Plates/Nitrate/)
+      1. This is esential to make sure the plate ID matches the corresponding key
+2. Open the [standard checking](Standard-Checking.qmd) and update relevant information
+3. Run the script and examine r$^2$ value
+   1. Ideally, all standards produce ≥ 0.98 r$^2$
+4. If r$^2$ is <0.98 examine the graph and remove problem standards
+   1. **Notes:**
+      1.  If possible, do not remove a standard that best approximates sample concentration
+      2.  If you have to remove more the 3 standards (only 5 points remaining) something likely went wrong and you should start over. 
+# Part 3: Calculating concentrations
+1. Open the [concentration calculation](concentration_calculation.qmd) script
+2. update the information to exactly match the settings from above (e.g. plate ID, removed standards)
+3. Run the script
+4. It should have outputted a file with the concentrations of your samples!
+# Part 4: Tidying
+1. Whenever you want a clean file of your data, run the [tidying script](tidying.qmd)
+   1. **Note:** Update site names and output paths to reflect your desired output.

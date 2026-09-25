@@ -1,0 +1,91 @@
+---
+title: "Data Tidying"
+author: "Jaedon D. Swanson"
+format: html
+execute:
+  echo: true
+  warning: false
+  message: false
+---
+# Packages
+- The following packages are necessary to run this code without errors
+```{r}
+library(tidyverse)
+library(ggpmisc)
+library(readxl)
+library(janitor)
+```
+
+# Nitrogen
+```{r}
+# Nitrate
+nitrate <- list.files(path = "~/Desktop/School/MS/Research/Microplate/Concentrations/Nitrate", # Reading in and combining all csv files for concentrations 
+                      pattern = "\\.csv$",
+                      full.names = TRUE) %>%
+  lapply(read_csv) %>%
+  bind_rows %>%
+  rename(sample_id = Sample_ID) %>%
+  rename(nitrate = Concentration) %>%
+  rename(replication = Replication) %>%
+  filter(!str_detect(sample_id, "High STD")) %>% # Removing the standards from the data frame
+  filter(!str_detect(sample_id, "x5dilute")) %>% # Removing the dilutions since full samples were within the curve
+  select(sample_id, replication, nitrate) %>% # Keeping Sample_ID, Replication, and concentration
+  mutate(nitrate = if_else(nitrate <= 0, NA_real_, nitrate)) %>%
+  mutate(date = str_extract(sample_id, "\\d{8}"))
+
+# Nitrite
+nitrite <- list.files(path = "~/Desktop/School/MS/Research/Microplate/Concentrations/Nitrite",
+ pattern = "\\.csv$",
+ full.names = TRUE) %>%
+ lapply(read_csv) %>%
+ bind_rows %>%
+  rename(sample_id = Sample_ID) %>%
+  rename(nitrite = Concentration) %>%
+  rename(replication = Replication) %>%
+  filter(!str_detect(sample_id, "Low STD")) %>%
+  select(sample_id, replication, nitrite) %>%
+  mutate(nitrite = if_else(nitrite <= 0, NA_real_, nitrite)) %>%
+  mutate(date = str_extract(sample_id, "\\d{8}"))
+```
+# Combining related data
+```{r}
+no_x <- nitrate %>%
+  left_join(nitrite, by = c("sample_id", "replication")) %>%   # inner_join ensures we only keep rows present in BOTH nitrate and nitrite
+  select(sample_id, replication, nitrate, nitrite, date = date.x) %>%
+  mutate(total_n = if_else(!is.na(nitrate) & !is.na(nitrite), nitrate + nitrite, NA_real_)) %>%
+  mutate(date = str_extract(sample_id, "\\d{8}")) %>%
+  mutate(event = case_when(
+    str_detect(sample_id, "06212026") ~ "Storm",
+    str_detect(sample_id, "07312026") ~ "Storm",
+    str_detect(sample_id, "08052026") ~ "Storm",
+    TRUE ~ "Base"
+    )) %>%
+  mutate(type = case_when(
+    str_detect(sample_id, "gcp") ~ "Stream", # gcp = stream
+    str_detect(sample_id, "elm") ~ "Stream", # elm = stream
+    TRUE ~ "Wetland" # not gcp or elm = wetland
+    )) %>%
+  mutate(site = str_extract(sample_id, "^[^_]+")) %>% # cleaning up sample_id
+  filter(!is.na(site)) %>% # removing samples with no site 
+  mutate(site = case_match(site,
+    "elm-bridge" ~ "Elmwood Downstream",
+    "elm-school" ~ "Elmwood Upstream",
+    "gcp" ~ "Glacier Creek Preserve",
+    "adams-in" ~ "Adams Park Inflow",
+    "adams-mid-up" ~ "Adams Park Middle (Upstream)",
+    "adams-mid" ~ "Adams Park Middle (Upstream)",
+    "adams-mid-down" ~ "Adams Park Middle (Downstream)",
+    "adams-out" ~ "Adams Park Outflow",
+    "heron-map" ~ "Heron Haven Maple Inflow",
+    "her-map" ~ "Heron Haven Maple Inflow",
+    "her-resi" ~ "Heron Haven Residential Inflow",
+    "her-out" ~ "Heron Haven Outflow",
+    "heron-resi" ~ "Heron Haven Residential Inflow",
+    "heron-out" ~ "Heron Haven Outflow",
+    .default = site))
+```
+# Data Export
+```{r}
+#### Saving created CSV files ####
+write.csv(no_x, "~/Desktop/School/MS/Research/Thesis/Data/no_x.csv", row.names = FALSE)
+```

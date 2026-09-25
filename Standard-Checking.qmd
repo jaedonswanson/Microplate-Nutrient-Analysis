@@ -6,7 +6,6 @@ editor: visual
 ---
 
 # Packages used in this code
-
 ```{r}
 library(tidyverse)
 library(ggpmisc)
@@ -30,7 +29,7 @@ USE_HIGH_RANGE <- FALSE
 ## Potential problem standards
 
 ```{r}
-ROWS_TO_DROP <- c()   # only change this after checking the curve with all points
+ROWS_TO_DROP <- c(5:7)   # only change this after checking the curve with all points
 ```
 
 # Concentration Vector creation
