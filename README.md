@@ -40,7 +40,6 @@ If only collecting water samples, they should be filtered through a .45 micron f
 This repository contains everything needed to get started running freshwater samples on a microplate (elx800) or similar. This is an efficient and inexpensive method of measuring nutrient concentration of freshwater samples.
 
 ## [Outline]
-
 - [Colorometric analysis of NO$\_x$](#colorometric-analysis-of-no_x)
   - [A note on sample collection](#a-note-on-sample-collection)
 - [Part 1: Setting up the experienment](#part-1-setting-up-the-experienment)
