@@ -39,14 +39,20 @@ If only collecting water samples, they should be filtered through a .45 micron f
 =======
 This repository contains everything needed to get started running freshwater samples on a microplate (elx800) or similar. This is an efficient and inexpensive method of measuring nutrient concentration of freshwater samples.
 
-## Table of contents
+## [Outline]
+
 - [Colorometric analysis of NO$\_x$](#colorometric-analysis-of-no_x)
-  - [Table of contents](#table-of-contents)
   - [A note on sample collection](#a-note-on-sample-collection)
-- [Part 1: Setting up the experiment](#part-1-setting-up-the-experiment)
+- [Part 1: Setting up the experienment](#part-1-setting-up-the-experienment)
   - [Part 2: Assessing the Standards](#part-2-assessing-the-standards)
 - [Part 3: Calculating concentrations](#part-3-calculating-concentrations)
 - [Part 4: Tidying](#part-4-tidying)
+  - [\[Outline\]](#outline)
+  - [A note on sample collection](#a-note-on-sample-collection-1)
+- [Part 1: Setting up the experiment](#part-1-setting-up-the-experiment)
+  - [Part 2: Assessing the Standards](#part-2-assessing-the-standards-1)
+- [Part 3: Calculating concentrations](#part-3-calculating-concentrations-1)
+- [Part 4: Tidying](#part-4-tidying-1)
 
 ## A note on sample collection
 If only collecting water samples, they should be filtered through a .45 micron filter. If the samples cannot be processed the same day, freeze them.
@@ -88,5 +94,4 @@ If only collecting water samples, they should be filtered through a .45 micron f
 
 # Part 4: Tidying
 1. Whenever you want a clean file of your data, run the [tidying script](tidying.qmd).
->>>>>>> 910c95b (Updating README)
    1. **Note:** Update site names and output paths to reflect your desired output.
